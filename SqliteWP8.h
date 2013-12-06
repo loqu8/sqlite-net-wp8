@@ -64,12 +64,8 @@ namespace Sqlite
     public ref class Sqlite3 sealed
     {
     public:
-#ifdef SQLITE_ENABLE_CEROD
 		static void sqlite3_activate_cerod(const Platform::Array<BYTE>^ passPhrase);
-#endif
-#ifdef SQLITE_HAS_CODEC
 		static void sqlite3_activate_see(const Platform::Array<BYTE>^ passPhrase);
-#endif
 		static int sqlite3_open(Platform::String^ filename, Database^* db);
         static int sqlite3_open_v2(Platform::String^ filename, Database^* db, int flags, Platform::String^ zVfs);
         static int sqlite3_close(Database^ db);
