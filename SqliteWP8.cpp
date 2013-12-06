@@ -23,8 +23,8 @@ vector<char> convert_to_utf8_buffer(String^ str)
         // Return an "empty" string
         return vector<char>(1);
     }
-
-    // Get the size of the utf-8 string
+	
+	// Get the size of the utf-8 string
     int size = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, str->Data(), str->Length(), nullptr, 0, nullptr, nullptr);
     if (size == 0)
     {
@@ -66,6 +66,20 @@ String^ convert_to_string(char const* str)
 
     return ref new String(buffer.data());
 }
+
+#ifdef SQLITE_ENABLE_CEROD
+void Sqlite3::sqlite3_activate_cerod(const Array<BYTE>^ passPhrase)
+{
+	::sqlite3_activate_cerod((char *)passPhrase->Data);
+}
+#endif
+
+#ifdef SQLITE_HAS_CODEC
+void Sqlite3::sqlite3_activate_see(const Array<BYTE>^ passPhrase)
+{
+	::sqlite3_activate_see((char *)passPhrase->Data);
+}
+#endif
 
 int Sqlite3::sqlite3_open(String^ filename, Database^* db)
 {
@@ -118,13 +132,25 @@ int Sqlite3::sqlite3_changes(Database^ db)
 
 int Sqlite3::sqlite3_prepare_v2(Database^ db, String^ query, Statement^* statement)
 {
-    sqlite3_stmt* actual_statement = nullptr;
-    int result = ::sqlite3_prepare16_v2(
+	return Sqlite3::sqlite3_prepare_v2(db, &query, statement);
+}
+
+int Sqlite3::sqlite3_prepare_v2(Database^ db, String^* query, Statement^* statement)
+{	
+    auto query_buffer = convert_to_utf8_buffer(*query);
+	const char *zTail;
+
+	sqlite3_stmt* actual_statement = nullptr;
+	int result = ::sqlite3_prepare_v2(
         db ? db->Handle : nullptr, 
-        query->IsEmpty() ? L"" : query->Data(), 
-        -1, 
+        query_buffer.data(),
+		query_buffer.size() - 1, 
         &actual_statement, 
-        nullptr);
+        &zTail);
+	
+	// reassign query to tail
+	*query = convert_to_string((char *)(zTail));
+	
     if (statement)
     {
         // If they didn't give us a pointer, the caller has leaked
