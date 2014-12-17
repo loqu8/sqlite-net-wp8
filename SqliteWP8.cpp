@@ -67,20 +67,6 @@ String^ convert_to_string(char const* str)
     return ref new String(buffer.data());
 }
 
-void Sqlite3::sqlite3_activate_cerod(const Array<BYTE>^ passPhrase)
-{
-#ifdef SQLITE_ENABLE_CEROD
-	::sqlite3_activate_cerod((char *)passPhrase->Data);
-#endif
-}
-
-void Sqlite3::sqlite3_activate_see(const Array<BYTE>^ passPhrase)
-{
-#ifdef SQLITE_HAS_CODEC
-	::sqlite3_activate_see((char *)passPhrase->Data);
-#endif
-}
-
 int Sqlite3::sqlite3_open(String^ filename, Database^* db)
 {
     auto filename_buffer = convert_to_utf8_buffer(filename);
